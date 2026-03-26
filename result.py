@@ -1,4 +1,3 @@
-
 from tkinter import *
 from PIL import Image, ImageTk
 from tkinter import ttk, messagebox
@@ -56,9 +55,9 @@ def generate_result_pdf(student_info, subjects, save_path):
     WHITE = colors.white
 
     title_style = ParagraphStyle("title", fontSize=20, fontName="Helvetica-Bold",
-                                  textColor=DARK, alignment=TA_CENTER, spaceAfter=2)
+                                  textColor=DARK, alignment=TA_CENTER, spaceAfter=6)
     sub_style   = ParagraphStyle("sub",   fontSize=11, fontName="Helvetica",
-                                  textColor=MED,  alignment=TA_CENTER, spaceAfter=4)
+                                  textColor=MED,  alignment=TA_CENTER, spaceAfter=8)
     label_style = ParagraphStyle("lbl",   fontSize=9,  fontName="Helvetica-Bold",
                                   textColor=DARK)
     value_style = ParagraphStyle("val",   fontSize=9,  fontName="Helvetica",
@@ -79,14 +78,17 @@ def generate_result_pdf(student_info, subjects, save_path):
     # ── Header ───────────────────────────────────────────────────────────────
     story.append(Paragraph("A.S. COLLEGE, KHANNA", title_style))
     story.append(Paragraph("Department of Computer Applications", sub_style))
-    story.append(HRFlowable(width="100%", thickness=2, color=DARK, spaceAfter=6))
+    story.append(Spacer(1, 0.2*cm))
+    story.append(HRFlowable(width="100%", thickness=2, color=DARK, spaceAfter=8))
+    
+    # Result Card Title
     story.append(Paragraph("STUDENT RESULT CARD", ParagraphStyle(
         "rc", fontSize=15, fontName="Helvetica-Bold",
         textColor=WHITE, alignment=TA_CENTER,
-        backColor=DARK, spaceAfter=8, spaceBefore=4,
-        borderPadding=(6, 0, 6, 0)
+        backColor=DARK, spaceAfter=12, spaceBefore=6,
+        borderPadding=(8, 4, 8, 4)
     )))
-    story.append(Spacer(1, 0.3*cm))
+    story.append(Spacer(1, 0.2*cm))
 
     # ── Student Info Table ───────────────────────────────────────────────────
     total_obtained = sum(s["obtained"] for s in subjects)
@@ -109,14 +111,14 @@ def generate_result_pdf(student_info, subjects, save_path):
         ("BACKGROUND", (2,0), (2,-1), LIGHT),
         ("BOX",        (0,0), (-1,-1), 0.5, MED),
         ("INNERGRID",  (0,0), (-1,-1), 0.3, colors.HexColor("#C0D4E8")),
-        ("TOPPADDING",    (0,0),(-1,-1), 6),
-        ("BOTTOMPADDING", (0,0),(-1,-1), 6),
+        ("TOPPADDING",    (0,0),(-1,-1), 8),
+        ("BOTTOMPADDING", (0,0),(-1,-1), 8),
         ("LEFTPADDING",   (0,0),(-1,-1), 8),
         ("RIGHTPADDING",  (0,0),(-1,-1), 8),
         ("VALIGN",     (0,0), (-1,-1), "MIDDLE"),
     ]))
     story.append(info_table)
-    story.append(Spacer(1, 0.4*cm))
+    story.append(Spacer(1, 0.6*cm))
 
     # ── Marks Table ──────────────────────────────────────────────────────────
     col_w = [1.2*cm, 6.5*cm, 2.8*cm, 2.8*cm, 2.5*cm, 2.0*cm]
@@ -171,16 +173,16 @@ def generate_result_pdf(student_info, subjects, save_path):
         # Grid
         ("BOX",           (0,0), (-1,-1), 1,   MED),
         ("INNERGRID",     (0,0), (-1,-1), 0.3, colors.HexColor("#C0D4E8")),
-        ("TOPPADDING",    (0,0), (-1,-1), 6),
-        ("BOTTOMPADDING", (0,0), (-1,-1), 6),
-        ("LEFTPADDING",   (0,0), (-1,-1), 6),
-        ("RIGHTPADDING",  (0,0), (-1,-1), 6),
+        ("TOPPADDING",    (0,0), (-1,-1), 8),
+        ("BOTTOMPADDING", (0,0), (-1,-1), 8),
+        ("LEFTPADDING",   (0,0), (-1,-1), 8),
+        ("RIGHTPADDING",  (0,0), (-1,-1), 8),
         ("VALIGN",        (0,0), (-1,-1), "MIDDLE"),
         ("ALIGN",         (0,0), (-1,-1), "CENTER"),
         ("ALIGN",         (1,1), (1,n-1), "LEFT"),
     ]))
     story.append(marks_table)
-    story.append(Spacer(1, 0.5*cm))
+    story.append(Spacer(1, 0.6*cm))
 
     # ── Result Summary Box ───────────────────────────────────────────────────
     summary_data = [[
@@ -203,7 +205,7 @@ def generate_result_pdf(student_info, subjects, save_path):
         ("VALIGN",        (0,0), (-1,-1), "MIDDLE"),
     ]))
     story.append(summary_table)
-    story.append(Spacer(1, 0.6*cm))
+    story.append(Spacer(1, 0.8*cm))
 
     # ── Grade Legend ─────────────────────────────────────────────────────────
     legend = [["Grade Scale:", "A+(≥90)", "A(≥80)", "B+(≥70)", "B(≥60)", "C(≥50)", "D(≥40)", "F(<40)"]]
@@ -217,34 +219,15 @@ def generate_result_pdf(student_info, subjects, save_path):
         ("BOX",           (0,0), (-1,-1), 0.5, MED),
         ("INNERGRID",     (0,0), (-1,-1), 0.3, MED),
         ("ALIGN",         (0,0), (-1,-1), "CENTER"),
-        ("TOPPADDING",    (0,0), (-1,-1), 4),
-        ("BOTTOMPADDING", (0,0), (-1,-1), 4),
+        ("TOPPADDING",    (0,0), (-1,-1), 6),
+        ("BOTTOMPADDING", (0,0), (-1,-1), 6),
     ]))
     story.append(legend_table)
-    story.append(Spacer(1, 0.8*cm))
+    story.append(Spacer(1, 1.2*cm))
 
-    # ── Signature Row ────────────────────────────────────────────────────────
-    sig_style = ParagraphStyle("sig", fontSize=9, fontName="Helvetica",
-                                textColor=DARK, alignment=TA_CENTER)
-    sig_bold  = ParagraphStyle("sigb",fontSize=9, fontName="Helvetica-Bold",
-                                textColor=DARK, alignment=TA_CENTER)
-    sig_data = [[
-        Paragraph("_____________________\nClass Teacher", sig_style),
-        Paragraph("_____________________\nExamination Controller", sig_style),
-        Paragraph("_____________________\nPrincipal", sig_style),
-    ]]
-    sig_table = Table(sig_data, colWidths=[page_w/3]*3)
-    sig_table.setStyle(TableStyle([
-        ("ALIGN",  (0,0),(-1,-1),"CENTER"),
-        ("VALIGN", (0,0),(-1,-1),"BOTTOM"),
-        ("TOPPADDING",   (0,0),(-1,-1), 30),
-        ("BOTTOMPADDING",(0,0),(-1,-1), 4),
-    ]))
-    story.append(sig_table)
-
-    # ── Footer ───────────────────────────────────────────────────────────────
-    story.append(Spacer(1, 0.3*cm))
-    story.append(HRFlowable(width="100%", thickness=1, color=MED))
+    # ── Footer (only) ────────────────────────────────────────────────────────
+    # Removed signature section as requested
+    story.append(HRFlowable(width="100%", thickness=1, color=MED, spaceBefore=0, spaceAfter=4))
     story.append(Paragraph(
         f"Generated by Student Result Management System (SRMS)  |  A.S. College, Khanna  |  {datetime.now().strftime('%d %b %Y, %I:%M %p')}",
         footer_style
@@ -420,6 +403,7 @@ class resultClass:
             messagebox.showerror("Error", str(ex))
 
     def _search(self):
+        """Search student and load their existing subjects from database"""
         if self.var_roll.get() in ("", "-- Select --"):
             messagebox.showwarning("Input", "Please select a roll number.", parent=self.root)
             return
@@ -428,14 +412,45 @@ class resultClass:
             cur = con.cursor()
             cur.execute("select name, course from student where roll=?", (self.var_roll.get(),))
             row = cur.fetchone()
-            con.close()
+            
             if row:
                 self.var_name.set(row[0])
                 self.var_course.set(row[1])
+                
+                # Load existing subjects for this student from result table
+                # Note: In result table, 'course' column stores the subject name
+                cur.execute(""" 
+                    SELECT course, marks_obtained, full_marks 
+                    FROM result 
+                    WHERE roll=? AND name=?
+                """, (self.var_roll.get(), row[0]))
+                
+                results = cur.fetchall()
+                
+                # Clear existing subjects and load from database
                 self.subjects.clear()
+                for result in results:
+                    subject_name = result[0]  # This is the subject name
+                    obtained = float(result[1])
+                    full = float(result[2])
+                    self.subjects.append({
+                        "subject": subject_name, 
+                        "obtained": obtained, 
+                        "full": full
+                    })
+                
+                # Refresh the treeview to show loaded subjects
                 self._refresh_tree()
+                
+                con.close()
+                
+                # Show message if subjects were loaded
+                if self.subjects:
+                    messagebox.showinfo("Loaded", f"Loaded {len(self.subjects)} existing subject(s).", parent=self.root)
             else:
                 messagebox.showerror("Not Found", "No student with that roll number.", parent=self.root)
+                con.close()
+                
         except Exception as ex:
             messagebox.showerror("Error", str(ex))
 
@@ -519,47 +534,72 @@ class resultClass:
         self._refresh_tree()
 
     def _save_all(self):
+        """Save all subjects to database, skipping duplicates"""
         if not self.var_name.get():
-            messagebox.showwarning("Input", "Please search a student first.", parent=self.root); return
+            messagebox.showwarning("Input", "Please search a student first.", parent=self.root)
+            return
         if not self.subjects:
-            messagebox.showwarning("Input", "Add at least one subject.", parent=self.root); return
+            messagebox.showwarning("Input", "Add at least one subject.", parent=self.root)
+            return
         try:
             con = sqlite3.connect("rms.db")
             cur = con.cursor()
             saved = 0
             skipped = 0
+            
             for s in self.subjects:
-                cur.execute("select * from result where roll=? and course=? and name=?",
-                            (self.var_roll.get(), self.var_course.get(), s["subject"]))
+                # Check if this subject already exists for this student
+                # Note: Using 'course' column to check for subject name
+                cur.execute(""" 
+                    SELECT * FROM result 
+                    WHERE roll=? AND name=? AND course=?
+                """, (self.var_roll.get(), self.var_name.get(), s["subject"]))
+                
                 if cur.fetchone():
                     skipped += 1
                     continue
+                
                 pct = (s["obtained"] / s["full"] * 100) if s["full"] > 0 else 0
+                
+                # Insert new result
                 cur.execute(
-                    "insert into result(roll,name,course,marks_obtained,full_marks,percentage) values(?,?,?,?,?,?)",
-                    (self.var_roll.get(), self.var_name.get(),
-                     s["subject"],
-                     str(s["obtained"]), str(s["full"]), f"{pct:.2f}")
+                    """INSERT INTO result(roll, name, course, marks_obtained, full_marks, percentage) 
+                       VALUES(?, ?, ?, ?, ?, ?)""",
+                    (self.var_roll.get(), 
+                     self.var_name.get(),
+                     s["subject"],           # Subject name goes in 'course' column
+                     str(s["obtained"]), 
+                     str(s["full"]), 
+                     f"{pct:.2f}")
                 )
                 saved += 1
+                
             con.commit()
             con.close()
+            
             msg = f"{saved} result(s) saved successfully."
             if skipped:
                 msg += f"\n{skipped} subject(s) already existed and were skipped."
             messagebox.showinfo("Saved", msg, parent=self.root)
+            
+            # Refresh the treeview to show any changes
+            self._refresh_tree()
+            
         except Exception as ex:
             messagebox.showerror("Error", str(ex), parent=self.root)
 
     def _generate_pdf(self):
         if not self.var_name.get():
-            messagebox.showwarning("Input", "Please search a student first.", parent=self.root); return
+            messagebox.showwarning("Input", "Please search a student first.", parent=self.root)
+            return
         if not self.subjects:
-            messagebox.showwarning("Input", "Add at least one subject before generating PDF.", parent=self.root); return
+            messagebox.showwarning("Input", "Add at least one subject before generating PDF.", parent=self.root)
+            return
         if not REPORTLAB_OK:
             messagebox.showerror("Missing Library",
                                   "reportlab is not installed.\nRun: pip install reportlab",
-                                  parent=self.root); return
+                                  parent=self.root)
+            return
         student_info = {
             "roll":   self.var_roll.get(),
             "name":   self.var_name.get(),
