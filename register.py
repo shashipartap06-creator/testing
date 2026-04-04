@@ -1,246 +1,383 @@
-from tkinter import *
+import customtkinter as ctk
 from PIL import Image, ImageTk
-from tkinter import ttk, messagebox
+from tkinter import messagebox
 import sqlite3
 import os
 import re
-from datetime import datetime
+import sys
 
-# ── Modern Color Palette (matching hi.py) ─────────────────────────────────────
-BG        = "#0F1C2E"   # Deep navy background
-SIDEBAR   = "#0A1628"   # Darker sidebar
-CARD_BG   = "#162032"   # Card backgrounds
-TOPBAR    = "#111E30"   # Top navigation bar
-ACCENT    = "#4361EE"   # Modern blue accent
-ACCENT2   = "#3A56D4"   # Darker blue for hover states
-GREEN     = "#06D6A0"   # Vibrant green
-ORANGE    = "#FF9E00"   # Modern amber
-PURPLE    = "#8338EC"   # Vibrant purple
-TEXT      = "#FFFFFF"   # Primary text
-SUBTEXT   = "#A0AEC0"   # Secondary text
-WHITE     = "#FFFFFF"
-SEP       = "#2D3748"   # Separator lines
-HOVER     = "#1E2E42"   # Hover effect color
-LIGHT_BG  = "#1E2E42"   # Lighter background for entries
+# ── Configure CustomTkinter Appearance ─────────────────────────────────────────
+ctk.set_appearance_mode("light")
+ctk.set_default_color_theme("blue")
+ctk.set_widget_scaling(1.4)
+ctk.set_window_scaling(1.4)
 
-FONT_TITLE  = ("Segoe UI", 12, "bold")
-FONT_BODY   = ("Segoe UI", 10)
-FONT_SMALL  = ("Segoe UI", 9)
-FONT_LARGE  = ("Segoe UI", 24, "bold")
+# ── High DPI Scaling for Linux ─────────────────────────────────────────────────
+def setup_high_dpi():
+    """Configure high DPI scaling for Linux"""
+    try:
+        if sys.platform == "linux":
+            os.environ['GDK_SCALE'] = '2'
+            os.environ['GDK_DPI_SCALE'] = '0.5'
+            
+        ctk.set_widget_scaling(1.0)
+        ctk.set_window_scaling(1.0)
+        
+    except:
+        pass
 
-class Register:
-    def __init__(self, root):
-        self.root = root
+setup_high_dpi()
+
+# ── Light Theme Colors (only) ──────────────────────────────────────────────────
+LIGHT_THEME = {
+    "bg": "#F0F2F5",
+    "glass_bg": "#FFFFFF",
+    "glass_border": "#E2E8F0",
+    "accent": "#6366F1",
+    "accent_hover": "#818CF8",
+    "green": "#10B981",
+    "orange": "#F59E0B",
+    "purple": "#8B5CF6",
+    "text_primary": "#1E293B",
+    "text_secondary": "#475569",
+    "subtext": "#94A3B8",
+    "error": "#EF4444",
+    "success": "#059669",
+    "card_bg": "#F8FAFC"
+}
+
+FONT_TITLE   = ("Segoe UI", 24, "bold")
+FONT_HEADING = ("Segoe UI", 16, "bold")
+FONT_BODY    = ("Segoe UI", 12)
+FONT_SMALL   = ("Segoe UI", 11)
+
+class Register(ctk.CTkToplevel):
+    def __init__(self, root=None):
+        if root is None:
+            self.root = ctk.CTk()
+        else:
+            self.root = root
+            self.root.destroy()
+            self.root = ctk.CTk()
+            
         self.root.title("SRMS — Create Account")
-        self.root.geometry("1400x750+0+0")
-        self.root.config(bg=BG)
-        self.root.resizable(False, False)
-
+        self.theme = LIGHT_THEME.copy()
+        
+        # Screen dimensions
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+        
+        width = 1000
+        height = 700
+        x = (screen_width - width) // 2
+        y = (screen_height - height) // 2
+        
+        self.root.geometry(f"{width}x{height}+{x}+{y}")
+        self.root.minsize(900, 600)
+        self.root.configure(fg_color=self.theme["bg"])
+        
         # Variables
-        self.var_fname = StringVar()
-        self.var_lname = StringVar()
-        self.var_contact = StringVar()
-        self.var_email = StringVar()
-        self.var_question = StringVar()
-        self.var_answer = StringVar()
-        self.var_password = StringVar()
-        self.var_cpassword = StringVar()
-        self.var_chk = IntVar()
-
+        self.var_fname = ctk.StringVar()
+        self.var_lname = ctk.StringVar()
+        self.var_contact = ctk.StringVar()
+        self.var_email = ctk.StringVar()
+        self.var_question = ctk.StringVar(value="Select")
+        self.var_answer = ctk.StringVar()
+        self.var_password = ctk.StringVar()
+        self.var_cpassword = ctk.StringVar()
+        self.var_chk = ctk.IntVar()
+        
         self.entry_fields = []
-
+        
         self._build_layout()
-
+        
     def _build_layout(self):
         # Main container
-        main_container = Frame(self.root, bg=BG)
-        main_container.pack(fill=BOTH, expand=True)
-
-        # Left decorative panel with gradient
-        left_panel = Frame(main_container, bg=ACCENT, width=500)
-        left_panel.pack(side=LEFT, fill=Y)
+        main_container = ctk.CTkFrame(self.root, fg_color="transparent")
+        main_container.pack(fill="both", expand=True, padx=20, pady=20)
+        
+        # ── Left Panel ─────────────────────────────────────────────────────────
+        left_panel = ctk.CTkFrame(
+            main_container, 
+            fg_color=self.theme["glass_bg"],
+            corner_radius=24,
+            width=320
+        )
+        left_panel.pack(side="left", fill="y", padx=(0, 20), pady=0)
         left_panel.pack_propagate(False)
-
-        # Gradient background on left panel
-        left_canvas = Canvas(left_panel, bg=ACCENT, highlightthickness=0)
-        left_canvas.pack(fill=BOTH, expand=True)
-
-        def update_left_gradient(event):
-            left_canvas.delete("gradient")
-            for i in range(event.height):
-                r = int(67 - (i * 0.12))
-                g = int(97 - (i * 0.1))
-                b = int(238 - (i * 0.35))
-                color = f"#{max(0, r):02x}{max(0, g):02x}{max(0, b):02x}"
-                left_canvas.create_line(0, i, event.width, i, fill=color, width=1, tags="gradient")
-
-        left_canvas.bind("<Configure>", update_left_gradient)
-
+        
         # Left panel content
-        try:
-            left_img = ImageTk.PhotoImage(file="images/side.png")
-            left_canvas.create_image(250, 350, image=left_img, tags="image")
-            self.left_img = left_img
-        except:
-            pass
-
-        Label(left_panel, text="🎓", font=("Segoe UI", 70), 
-              bg=ACCENT, fg=WHITE).place(relx=0.5, rely=0.25, anchor=CENTER)
-        Label(left_panel, text="Welcome to", font=("Segoe UI", 18), 
-              bg=ACCENT, fg=WHITE).place(relx=0.5, rely=0.4, anchor=CENTER)
-        Label(left_panel, text="Student Result\nManagement System", 
-              font=("Segoe UI", 26, "bold"), bg=ACCENT, fg=WHITE, justify=CENTER
-              ).place(relx=0.5, rely=0.52, anchor=CENTER)
-        Label(left_panel, text="Create your account\nto get started", 
-              font=("Segoe UI", 12), bg=ACCENT, fg=SUBTEXT, justify=CENTER
-              ).place(relx=0.5, rely=0.72, anchor=CENTER)
-
-        # Right panel - Registration Form
-        right_panel = Frame(main_container, bg=CARD_BG)
-        right_panel.pack(side=LEFT, fill=BOTH, expand=True)
-
-        # Title
-        title_frame = Frame(right_panel, bg=CARD_BG)
-        title_frame.pack(fill=X, pady=(30, 15))
-        Label(title_frame, text="Create Account", font=("Segoe UI", 28, "bold"),
-              bg=CARD_BG, fg=WHITE).pack()
-        Label(title_frame, text="Please fill in the details below to register", 
-              font=FONT_BODY, bg=CARD_BG, fg=SUBTEXT).pack()
-
+        left_content = ctk.CTkFrame(left_panel, fg_color="transparent")
+        left_content.pack(expand=True, fill="both", padx=25, pady=40)
+        
+        # Logo
+        logo_frame = ctk.CTkFrame(left_content, fg_color="transparent")
+        logo_frame.pack(pady=(0, 20))
+        
+        ctk.CTkLabel(logo_frame, text="🎓", 
+                    font=("Segoe UI", 56, "bold"),
+                    text_color=self.theme["accent"]).pack()
+        
+        ctk.CTkLabel(left_content, text="SRMS",
+                    font=FONT_TITLE, text_color=self.theme["text_primary"]).pack()
+        
+        ctk.CTkLabel(left_content, text="Student Result Management System",
+                    font=FONT_SMALL, text_color=self.theme["text_secondary"],
+                    wraplength=250).pack(pady=(5, 30))
+        
+        # Stats Card
+        stats_card = ctk.CTkFrame(
+            left_content, 
+            fg_color=self.theme["card_bg"],
+            corner_radius=16
+        )
+        stats_card.pack(fill="x", pady=20)
+        
+        ctk.CTkLabel(stats_card, text="📊",
+                    font=("Segoe UI", 32), text_color=self.theme["green"]).pack(pady=(15, 5))
+        
+        ctk.CTkLabel(stats_card, text="500+",
+                    font=FONT_HEADING, text_color=self.theme["text_primary"]).pack()
+        
+        ctk.CTkLabel(stats_card, text="Active Students",
+                    font=FONT_SMALL, text_color=self.theme["text_secondary"]).pack(pady=(0, 15))
+        
+        # Features
+        features = ["✓ Easy Result Management", "✓ Real-time Reports", "✓ Secure & Reliable"]
+        for feature in features:
+            ctk.CTkLabel(left_content, text=feature,
+                        font=FONT_SMALL, text_color=self.theme["text_secondary"],
+                        anchor="w").pack(anchor="w", pady=5)
+        
+        # ── Right Panel - Form ─────────────────────────────────────────────────
+        right_panel = ctk.CTkFrame(
+            main_container, 
+            fg_color=self.theme["glass_bg"],
+            corner_radius=24
+        )
+        right_panel.pack(side="left", fill="both", expand=True)
+        
+        # Scrollable form
+        form_container = ctk.CTkScrollableFrame(
+            right_panel, 
+            fg_color="transparent",
+            scrollbar_button_color=self.theme["accent"],
+            scrollbar_button_hover_color=self.theme["accent_hover"]
+        )
+        form_container.pack(fill="both", expand=True, padx=35, pady=35)
+        
+        # Form Header
+        ctk.CTkLabel(form_container, text="Create Account",
+                    font=FONT_TITLE, text_color=self.theme["text_primary"]).pack(anchor="w")
+        
+        ctk.CTkLabel(form_container, text="Please fill in the details to get started",
+                    font=FONT_BODY, text_color=self.theme["text_secondary"]).pack(anchor="w", pady=(5, 25))
+        
         # Separator
-        Frame(right_panel, bg=SEP, height=2).pack(fill=X, padx=50, pady=10)
-
-        # Form container with scrollbar
-        form_canvas = Canvas(right_panel, bg=CARD_BG, highlightthickness=0)
-        form_scrollbar = Scrollbar(right_panel, orient=VERTICAL, command=form_canvas.yview)
-        form_frame = Frame(form_canvas, bg=CARD_BG)
-
-        form_canvas.configure(yscrollcommand=form_scrollbar.set)
-        form_canvas.create_window((0, 0), window=form_frame, anchor="nw", width=700)
-        form_frame.bind("<Configure>", lambda e: form_canvas.configure(scrollregion=form_canvas.bbox("all")))
-
-        form_canvas.pack(side=LEFT, fill=BOTH, expand=True, padx=30, pady=15)
-        form_scrollbar.pack(side=RIGHT, fill=Y)
-
-        # Mouse wheel scrolling
-        def _on_mousewheel(event):
-            form_canvas.yview_scroll(int(-1*(event.delta/120)), "units")
-        form_canvas.bind_all("<MouseWheel>", _on_mousewheel)
-
-        # Row 1 - First Name & Last Name
-        Label(form_frame, text="First Name", font=FONT_TITLE,
-              bg=CARD_BG, fg=SUBTEXT).grid(row=0, column=0, padx=(20, 10), pady=(15, 5), sticky=W)
-        self.txt_fname = Entry(form_frame, textvariable=self.var_fname, font=FONT_BODY,
-                               bg=LIGHT_BG, fg=WHITE, relief=SOLID, bd=1, width=30,
-                               insertbackground=WHITE)
-        self.txt_fname.grid(row=1, column=0, padx=(20, 10), pady=(0, 15), sticky=EW)
+        ctk.CTkFrame(form_container, height=2, fg_color=self.theme["glass_border"]).pack(fill="x", pady=(0, 25))
+        
+        # Two-column layout for name
+        name_row = ctk.CTkFrame(form_container, fg_color="transparent")
+        name_row.pack(fill="x", pady=(0, 15))
+        
+        # First Name
+        fname_frame = ctk.CTkFrame(name_row, fg_color="transparent")
+        fname_frame.pack(side="left", fill="x", expand=True, padx=(0, 10))
+        
+        ctk.CTkLabel(fname_frame, text="First Name", font=FONT_BODY,
+                    text_color=self.theme["text_secondary"]).pack(anchor="w")
+        
+        self.txt_fname = ctk.CTkEntry(
+            fname_frame, textvariable=self.var_fname,
+            placeholder_text="Enter first name",
+            height=44, corner_radius=12, border_width=1,
+            fg_color=self.theme["card_bg"],
+            border_color=self.theme["glass_border"],
+            text_color=self.theme["text_primary"]
+        )
+        self.txt_fname.pack(fill="x", pady=(5, 0))
         self.txt_fname.bind("<Return>", self._on_enter_pressed)
         self.entry_fields.append(self.txt_fname)
-
-        Label(form_frame, text="Last Name", font=FONT_TITLE,
-              bg=CARD_BG, fg=SUBTEXT).grid(row=0, column=1, padx=(10, 20), pady=(15, 5), sticky=W)
-        self.txt_lname = Entry(form_frame, textvariable=self.var_lname, font=FONT_BODY,
-                               bg=LIGHT_BG, fg=WHITE, relief=SOLID, bd=1, width=30,
-                               insertbackground=WHITE)
-        self.txt_lname.grid(row=1, column=1, padx=(10, 20), pady=(0, 15), sticky=EW)
+        
+        # Last Name
+        lname_frame = ctk.CTkFrame(name_row, fg_color="transparent")
+        lname_frame.pack(side="left", fill="x", expand=True, padx=(10, 0))
+        
+        ctk.CTkLabel(lname_frame, text="Last Name", font=FONT_BODY,
+                    text_color=self.theme["text_secondary"]).pack(anchor="w")
+        
+        self.txt_lname = ctk.CTkEntry(
+            lname_frame, textvariable=self.var_lname,
+            placeholder_text="Enter last name",
+            height=44, corner_radius=12, border_width=1,
+            fg_color=self.theme["card_bg"],
+            border_color=self.theme["glass_border"],
+            text_color=self.theme["text_primary"]
+        )
+        self.txt_lname.pack(fill="x", pady=(5, 0))
         self.txt_lname.bind("<Return>", self._on_enter_pressed)
         self.entry_fields.append(self.txt_lname)
-
-        # Row 2 - Contact & Email
-        Label(form_frame, text="Contact No.", font=FONT_TITLE,
-              bg=CARD_BG, fg=SUBTEXT).grid(row=2, column=0, padx=(20, 10), pady=(5, 5), sticky=W)
-        self.txt_contact = Entry(form_frame, textvariable=self.var_contact, font=FONT_BODY,
-                                 bg=LIGHT_BG, fg=WHITE, relief=SOLID, bd=1, width=30,
-                                 insertbackground=WHITE)
-        self.txt_contact.grid(row=3, column=0, padx=(20, 10), pady=(0, 15), sticky=EW)
+        
+        # Contact
+        contact_frame = ctk.CTkFrame(form_container, fg_color="transparent")
+        contact_frame.pack(fill="x", pady=(0, 15))
+        
+        ctk.CTkLabel(contact_frame, text="Contact Number", font=FONT_BODY,
+                    text_color=self.theme["text_secondary"]).pack(anchor="w")
+        
+        self.txt_contact = ctk.CTkEntry(
+            contact_frame, textvariable=self.var_contact,
+            placeholder_text="Enter 10-digit mobile number",
+            height=44, corner_radius=12, border_width=1,
+            fg_color=self.theme["card_bg"],
+            border_color=self.theme["glass_border"],
+            text_color=self.theme["text_primary"]
+        )
+        self.txt_contact.pack(fill="x", pady=(5, 0))
         self.txt_contact.bind("<Return>", self._on_enter_pressed)
         self.entry_fields.append(self.txt_contact)
-
-        Label(form_frame, text="Email", font=FONT_TITLE,
-              bg=CARD_BG, fg=SUBTEXT).grid(row=2, column=1, padx=(10, 20), pady=(5, 5), sticky=W)
-        self.txt_email = Entry(form_frame, textvariable=self.var_email, font=FONT_BODY,
-                               bg=LIGHT_BG, fg=WHITE, relief=SOLID, bd=1, width=30,
-                               insertbackground=WHITE)
-        self.txt_email.grid(row=3, column=1, padx=(10, 20), pady=(0, 15), sticky=EW)
+        
+        # Email
+        email_frame = ctk.CTkFrame(form_container, fg_color="transparent")
+        email_frame.pack(fill="x", pady=(0, 15))
+        
+        ctk.CTkLabel(email_frame, text="Email Address", font=FONT_BODY,
+                    text_color=self.theme["text_secondary"]).pack(anchor="w")
+        
+        self.txt_email = ctk.CTkEntry(
+            email_frame, textvariable=self.var_email,
+            placeholder_text="Enter email address",
+            height=44, corner_radius=12, border_width=1,
+            fg_color=self.theme["card_bg"],
+            border_color=self.theme["glass_border"],
+            text_color=self.theme["text_primary"]
+        )
+        self.txt_email.pack(fill="x", pady=(5, 0))
         self.txt_email.bind("<Return>", self._on_enter_pressed)
         self.entry_fields.append(self.txt_email)
-
-        # Row 3 - Security Question
-        Label(form_frame, text="Security Question", font=FONT_TITLE,
-              bg=CARD_BG, fg=SUBTEXT).grid(row=4, column=0, padx=(20, 10), pady=(5, 5), sticky=W)
         
-        self.cmb_quest = ttk.Combobox(form_frame, textvariable=self.var_question, 
-                                      font=FONT_BODY, state="readonly", width=28)
-        self.cmb_quest['values'] = ("Select", "Your Birth Place", "Your Girlfriend Name", "Your Pet Name")
-        self.cmb_quest.grid(row=5, column=0, padx=(20, 10), pady=(0, 15), sticky=EW)
-        self.cmb_quest.current(0)
-        self.cmb_quest.bind("<Return>", self._on_enter_pressed)
-
-        Label(form_frame, text="Answer", font=FONT_TITLE,
-              bg=CARD_BG, fg=SUBTEXT).grid(row=4, column=1, padx=(10, 20), pady=(5, 5), sticky=W)
-        self.txt_answer = Entry(form_frame, textvariable=self.var_answer, font=FONT_BODY,
-                                bg=LIGHT_BG, fg=WHITE, relief=SOLID, bd=1, width=30,
-                                insertbackground=WHITE)
-        self.txt_answer.grid(row=5, column=1, padx=(10, 20), pady=(0, 15), sticky=EW)
+        # Security Question
+        sec_frame = ctk.CTkFrame(form_container, fg_color="transparent")
+        sec_frame.pack(fill="x", pady=(0, 15))
+        
+        ctk.CTkLabel(sec_frame, text="Security Question", font=FONT_BODY,
+                    text_color=self.theme["text_secondary"]).pack(anchor="w")
+        
+        self.cmb_quest = ctk.CTkComboBox(
+            sec_frame, variable=self.var_question,
+            values=["Select", "Your Birth Place", "Your Girlfriend Name", "Your Pet Name"],
+            height=44, corner_radius=12, border_width=1,
+            fg_color=self.theme["card_bg"],
+            border_color=self.theme["glass_border"],
+            button_color=self.theme["accent"],
+            button_hover_color=self.theme["accent_hover"],
+            text_color=self.theme["text_primary"]
+        )
+        self.cmb_quest.pack(fill="x", pady=(5, 0))
+        
+        # Answer
+        answer_frame = ctk.CTkFrame(form_container, fg_color="transparent")
+        answer_frame.pack(fill="x", pady=(0, 15))
+        
+        ctk.CTkLabel(answer_frame, text="Answer", font=FONT_BODY,
+                    text_color=self.theme["text_secondary"]).pack(anchor="w")
+        
+        self.txt_answer = ctk.CTkEntry(
+            answer_frame, textvariable=self.var_answer,
+            placeholder_text="Enter your security answer",
+            height=44, corner_radius=12, border_width=1,
+            fg_color=self.theme["card_bg"],
+            border_color=self.theme["glass_border"],
+            text_color=self.theme["text_primary"]
+        )
+        self.txt_answer.pack(fill="x", pady=(5, 0))
         self.txt_answer.bind("<Return>", self._on_enter_pressed)
         self.entry_fields.append(self.txt_answer)
-
-        # Row 4 - Password & Confirm Password
-        Label(form_frame, text="Password", font=FONT_TITLE,
-              bg=CARD_BG, fg=SUBTEXT).grid(row=6, column=0, padx=(20, 10), pady=(5, 5), sticky=W)
-        self.txt_password = Entry(form_frame, textvariable=self.var_password, font=FONT_BODY,
-                                  bg=LIGHT_BG, fg=WHITE, relief=SOLID, bd=1, width=30,
-                                  insertbackground=WHITE, show="•")
-        self.txt_password.grid(row=7, column=0, padx=(20, 10), pady=(0, 15), sticky=EW)
+        
+        # Password
+        pass_frame = ctk.CTkFrame(form_container, fg_color="transparent")
+        pass_frame.pack(fill="x", pady=(0, 15))
+        
+        ctk.CTkLabel(pass_frame, text="Password", font=FONT_BODY,
+                    text_color=self.theme["text_secondary"]).pack(anchor="w")
+        
+        self.txt_password = ctk.CTkEntry(
+            pass_frame, textvariable=self.var_password,
+            placeholder_text="Enter password (min 6 characters)",
+            show="•", height=44, corner_radius=12, border_width=1,
+            fg_color=self.theme["card_bg"],
+            border_color=self.theme["glass_border"],
+            text_color=self.theme["text_primary"]
+        )
+        self.txt_password.pack(fill="x", pady=(5, 0))
         self.txt_password.bind("<Return>", self._on_enter_pressed)
         self.entry_fields.append(self.txt_password)
-
-        Label(form_frame, text="Confirm Password", font=FONT_TITLE,
-              bg=CARD_BG, fg=SUBTEXT).grid(row=6, column=1, padx=(10, 20), pady=(5, 5), sticky=W)
-        self.txt_cpassword = Entry(form_frame, textvariable=self.var_cpassword, font=FONT_BODY,
-                                   bg=LIGHT_BG, fg=WHITE, relief=SOLID, bd=1, width=30,
-                                   insertbackground=WHITE, show="•")
-        self.txt_cpassword.grid(row=7, column=1, padx=(10, 20), pady=(0, 15), sticky=EW)
+        
+        # Confirm Password
+        cpass_frame = ctk.CTkFrame(form_container, fg_color="transparent")
+        cpass_frame.pack(fill="x", pady=(0, 20))
+        
+        ctk.CTkLabel(cpass_frame, text="Confirm Password", font=FONT_BODY,
+                    text_color=self.theme["text_secondary"]).pack(anchor="w")
+        
+        self.txt_cpassword = ctk.CTkEntry(
+            cpass_frame, textvariable=self.var_cpassword,
+            placeholder_text="Confirm your password",
+            show="•", height=44, corner_radius=12, border_width=1,
+            fg_color=self.theme["card_bg"],
+            border_color=self.theme["glass_border"],
+            text_color=self.theme["text_primary"]
+        )
+        self.txt_cpassword.pack(fill="x", pady=(5, 0))
         self.txt_cpassword.bind("<Return>", self._on_enter_pressed)
         self.entry_fields.append(self.txt_cpassword)
-
+        
         # Terms & Conditions
-        chk_frame = Frame(form_frame, bg=CARD_BG)
-        chk_frame.grid(row=8, column=0, columnspan=2, padx=20, pady=(10, 10), sticky=W)
+        terms_frame = ctk.CTkFrame(form_container, fg_color="transparent")
+        terms_frame.pack(fill="x", pady=(0, 20))
         
-        Checkbutton(chk_frame, text="I Agree The Terms & Conditions", 
-                   variable=self.var_chk, onvalue=1, offvalue=0,
-                   bg=CARD_BG, fg=SUBTEXT, font=FONT_BODY,
-                   selectcolor=CARD_BG, activebackground=CARD_BG).pack(side=LEFT)
-
+        self.chk_terms = ctk.CTkCheckBox(
+            terms_frame, text="I agree to the Terms & Conditions",
+            variable=self.var_chk, onvalue=1, offvalue=0,
+            text_color=self.theme["text_secondary"],
+            fg_color=self.theme["accent"],
+            hover_color=self.theme["accent_hover"],
+            border_color=self.theme["glass_border"]
+        )
+        self.chk_terms.pack(anchor="w")
+        
         # Register Button
-        btn_frame = Frame(form_frame, bg=CARD_BG)
-        btn_frame.grid(row=9, column=0, columnspan=2, padx=20, pady=(15, 10), sticky=EW)
-
-        btn_register = Button(btn_frame, text="🔐 REGISTER", font=FONT_TITLE,
-                             bg=GREEN, fg=WHITE, cursor="hand2", relief=FLAT,
-                             activebackground="#05b88a", command=self.register_data, pady=12)
-        btn_register.pack(fill=X)
-        btn_register.bind("<Return>", lambda e: self.register_data())
-
-        # Login Link
-        login_frame = Frame(form_frame, bg=CARD_BG)
-        login_frame.grid(row=10, column=0, columnspan=2, padx=20, pady=(5, 20), sticky=EW)
-
-        Label(login_frame, text="Already have an account?", font=FONT_BODY,
-              bg=CARD_BG, fg=SUBTEXT).pack(side=LEFT)
+        self.btn_register = ctk.CTkButton(
+            form_container, text="🔐 CREATE ACCOUNT",
+            font=FONT_HEADING, height=52, corner_radius=14,
+            fg_color=self.theme["green"],
+            hover_color="#059669",
+            text_color="white",
+            command=self.register_data
+        )
+        self.btn_register.pack(fill="x", pady=(10, 15))
+        self.btn_register.bind("<Return>", lambda e: self.register_data())
         
-        btn_login = Button(login_frame, text="Sign In Here", font=("Segoe UI", 10, "bold"),
-                          bg=CARD_BG, fg=ACCENT, cursor="hand2", relief=FLAT,
-                          activebackground=CARD_BG, command=self.login_window)
-        btn_login.pack(side=LEFT, padx=5)
-        btn_login.bind("<Return>", lambda e: self.login_window())
-
-        form_frame.grid_columnconfigure(0, weight=1)
-        form_frame.grid_columnconfigure(1, weight=1)
-
+        # Login Link
+        login_frame = ctk.CTkFrame(form_container, fg_color="transparent")
+        login_frame.pack(fill="x", pady=(5, 10))
+        
+        ctk.CTkLabel(login_frame, text="Already have an account?",
+                    font=FONT_BODY, text_color=self.theme["text_secondary"]).pack(side="left")
+        
+        self.btn_login = ctk.CTkButton(
+            login_frame, text="Sign In",
+            font=FONT_BODY, fg_color="transparent",
+            hover_color=self.theme["glass_bg"],
+            text_color=self.theme["accent"],
+            command=self.login_window
+        )
+        self.btn_login.pack(side="left", padx=(10, 0))
+        
+        # Set focus
+        self.txt_fname.focus()
+    
     def _on_enter_pressed(self, event):
-        """Handle Enter key - move to next field"""
         current = event.widget
         try:
             index = self.entry_fields.index(current)
@@ -251,59 +388,65 @@ class Register:
         except ValueError:
             pass
         return "break"
-
+    
     def validate_email(self, email):
-        """Validate email format"""
         pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
         return re.match(pattern, email)
-
+    
     def validate_contact(self, contact):
-        """Validate contact number"""
         return contact.isdigit() and len(contact) == 10
-
+    
     def login_window(self):
         self.root.destroy()
-        os.system("python login.py")
-
+        try:
+            import login
+            login_root = ctk.CTk()
+            if hasattr(login, 'LoginClass'):
+                login.LoginClass(login_root)
+            login_root.mainloop()
+        except ImportError:
+            pass
+    
     def clear(self):
-        self.txt_fname.delete(0, END)
-        self.txt_lname.delete(0, END)
-        self.txt_contact.delete(0, END)
-        self.txt_email.delete(0, END)
-        self.cmb_quest.current(0)
-        self.txt_answer.delete(0, END)
-        self.txt_password.delete(0, END)
-        self.txt_cpassword.delete(0, END)
+        self.txt_fname.delete(0, 'end')
+        self.txt_lname.delete(0, 'end')
+        self.txt_contact.delete(0, 'end')
+        self.txt_email.delete(0, 'end')
+        self.cmb_quest.set("Select")
+        self.txt_answer.delete(0, 'end')
+        self.txt_password.delete(0, 'end')
+        self.txt_cpassword.delete(0, 'end')
         self.var_chk.set(0)
-
+        self.txt_fname.focus()
+    
     def register_data(self):
         # Validation
-        if self.txt_fname.get() == "":
+        if self.txt_fname.get().strip() == "":
             messagebox.showerror("Error", "First Name is required", parent=self.root)
             self.txt_fname.focus()
             return
         
-        if self.txt_lname.get() == "":
+        if self.txt_lname.get().strip() == "":
             messagebox.showerror("Error", "Last Name is required", parent=self.root)
             self.txt_lname.focus()
             return
         
-        if self.txt_contact.get() == "":
+        if self.txt_contact.get().strip() == "":
             messagebox.showerror("Error", "Contact Number is required", parent=self.root)
             self.txt_contact.focus()
             return
         
-        if not self.validate_contact(self.txt_contact.get()):
+        if not self.validate_contact(self.txt_contact.get().strip()):
             messagebox.showerror("Error", "Contact Number must be 10 digits", parent=self.root)
             self.txt_contact.focus()
             return
         
-        if self.txt_email.get() == "":
+        if self.txt_email.get().strip() == "":
             messagebox.showerror("Error", "Email is required", parent=self.root)
             self.txt_email.focus()
             return
         
-        if not self.validate_email(self.txt_email.get()):
+        if not self.validate_email(self.txt_email.get().strip()):
             messagebox.showerror("Error", "Invalid email format", parent=self.root)
             self.txt_email.focus()
             return
@@ -313,7 +456,7 @@ class Register:
             self.cmb_quest.focus()
             return
         
-        if self.txt_answer.get() == "":
+        if self.txt_answer.get().strip() == "":
             messagebox.showerror("Error", "Answer is required", parent=self.root)
             self.txt_answer.focus()
             return
@@ -334,14 +477,13 @@ class Register:
             return
         
         if self.var_chk.get() == 0:
-            messagebox.showerror("Error", "Please agree our terms & conditions", parent=self.root)
+            messagebox.showerror("Error", "Please agree to the terms & conditions", parent=self.root)
             return
-
+        
         try:
             con = sqlite3.connect(database="rms.db")
             cur = con.cursor()
             
-            # Check if email already exists
             cur.execute("SELECT * FROM employee WHERE email=?", (self.txt_email.get(),))
             row = cur.fetchone()
             
@@ -350,15 +492,14 @@ class Register:
                 con.close()
                 return
             
-            # Insert new user
             cur.execute("""INSERT INTO employee (f_name, l_name, contact, email, question, answer, password) 
                           VALUES(?,?,?,?,?,?,?)""", (
-                self.txt_fname.get(),
-                self.txt_lname.get(),
-                self.txt_contact.get(),
-                self.txt_email.get(),
+                self.txt_fname.get().strip(),
+                self.txt_lname.get().strip(),
+                self.txt_contact.get().strip(),
+                self.txt_email.get().strip(),
                 self.cmb_quest.get(),
-                self.txt_answer.get(),
+                self.txt_answer.get().strip(),
                 self.txt_password.get()
             ))
             
@@ -377,6 +518,11 @@ class Register:
 
 
 if __name__ == "__main__":
-    root = Tk()
-    obj = Register(root)
-    root.mainloop()
+    try:
+        from ctypes import windll
+        windll.shcore.SetProcessDpiAwareness(1)
+    except:
+        pass
+    
+    app = Register()
+    app.root.mainloop()

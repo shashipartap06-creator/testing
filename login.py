@@ -1,197 +1,249 @@
 from tkinter import *
 from PIL import Image, ImageTk, ImageDraw
 from tkinter import ttk, messagebox
-from datetime import *
-from math import *
+from datetime import datetime
+from math import sin, cos, radians
 import sqlite3
 import os
+
 class Login_window:
     def __init__(self, root):
         self.root = root
-        self.root.title("Login Window")
-        self.root.geometry("1350x700+0+0")
-        self.root.config(bg="#021e2f")
+        self.root.title("SRMS — Login")
+        self.root.geometry("1100x650+100+50")
+        self.root.config(bg="#F0F4F8")
+        self.root.resizable(False, False)
 
-        # =======Left Panel=======
-        left_lbl = Label(self.root, bg="#08a3d2", bd=0)
-        left_lbl.place(x=0, y=0, relheight=1, width=600)
+        # Main container
+        main_frame = Frame(self.root, bg="#F0F4F8")
+        main_frame.pack(fill=BOTH, expand=True)
 
-        # =======Right Panel=======
-        right_lbl = Label(self.root, bg="#031f3c", bd=0)
-        right_lbl.place(x=600, y=0, relheight=1, relwidth=1)
+        # Left Panel - Welcome & Clock
+        left_panel = Frame(main_frame, bg="#1A3E6F", width=500)
+        left_panel.pack(side=LEFT, fill=Y, expand=False)
+        left_panel.pack_propagate(False)
 
-        # =======Login Frame=======
-        login_frame = Frame(self.root, bg="white")
-        login_frame.place(x=550, y=80, width=500, height=550)
+        # Welcome text
+        welcome_frame = Frame(left_panel, bg="#1A3E6F")
+        welcome_frame.pack(pady=(50, 20))
+        Label(welcome_frame, text="🎓", font=("Segoe UI", 48), bg="#1A3E6F", fg="white").pack()
+        Label(welcome_frame, text="STUDENT RESULT", font=("Segoe UI", 24, "bold"), bg="#1A3E6F", fg="white").pack()
+        Label(welcome_frame, text="MANAGEMENT SYSTEM", font=("Segoe UI", 20, "bold"), bg="#1A3E6F", fg="white").pack()
+        Label(welcome_frame, text="A.S. College, Khanna", font=("Segoe UI", 12), bg="#1A3E6F", fg="#A8C4E0").pack(pady=(10, 0))
 
-        title = Label(login_frame, text="LOGIN HERE", font=("times new roman", 25, "bold"), bg="white", fg="#0b5377")
-        title.place(x=100, y=30)
+        # Clock
+        self.clock_lbl = Label(left_panel, bg="#1A3E6F")
+        self.clock_lbl.pack(pady=30)
+        self.lbl_time = Label(left_panel, font=("Segoe UI", 18, "bold"), bg="#1A3E6F", fg="white")
+        self.lbl_time.pack()
+        self.lbl_date = Label(left_panel, font=("Segoe UI", 11), bg="#1A3E6F", fg="#A8C4E0")
+        self.lbl_date.pack()
+
+        # Right Panel - Login Form
+        right_panel = Frame(main_frame, bg="white", width=600)
+        right_panel.pack(side=RIGHT, fill=BOTH, expand=True)
+
+        # Form container
+        form_frame = Frame(right_panel, bg="white")
+        form_frame.pack(expand=True, padx=50, pady=60)
+
+        # Title
+        Label(form_frame, text="Login to Your Account", font=("Segoe UI", 24, "bold"),
+              bg="white", fg="#1A3E6F").pack(anchor="w", pady=(0, 10))
+        Label(form_frame, text="Welcome back! Please enter your credentials.",
+              font=("Segoe UI", 11), bg="white", fg="#7F8C8D").pack(anchor="w", pady=(0, 30))
 
         # Email
-        email = Label(login_frame, text="EMAIL ADDRESS", font=("times new roman", 13, "bold"), bg="white", fg="#333")
-        email.place(x=50, y=120)
-        self.txt_email = Entry(login_frame, font=("times new roman", 15), bg="lightgray")
-        self.txt_email.place(x=50, y=150, width=400)
+        Label(form_frame, text="Email Address", font=("Segoe UI", 12, "bold"),
+              bg="white", fg="#333").pack(anchor="w")
+        self.txt_email = Entry(form_frame, font=("Segoe UI", 12), bg="#F0F4F8",
+                               relief=SOLID, bd=1, highlightthickness=1,
+                               highlightcolor="#1A3E6F", highlightbackground="#DDD")
+        self.txt_email.pack(fill=X, pady=(5, 20), ipady=8)
 
         # Password
-        pass_ = Label(login_frame, text="PASSWORD", font=("times new roman", 13, "bold"), bg="white", fg="#333")
-        pass_.place(x=50, y=210)
-        self.txt_pass = Entry(login_frame, font=("times new roman", 15), bg="lightgray", show="*")
-        self.txt_pass.place(x=50, y=240, width=400)
-
-        # Register & Forget Password links
-        btn_register = Button(login_frame, text="Register new Account?", font=("times new roman", 12),
-                              bd=0, cursor="hand2", fg="#c0392b", bg="white", command=self.register_window)
-        btn_register.place(x=50, y=295)
-
-        btn_forget = Button(login_frame, text="Forget Password?", font=("times new roman", 12),
-                            bd=0, cursor="hand2", fg="#c0392b", bg="white", command=self.forget_password)
-        btn_forget.place(x=270, y=295)
+        Label(form_frame, text="Password", font=("Segoe UI", 12, "bold"),
+              bg="white", fg="#333").pack(anchor="w")
+        self.txt_pass = Entry(form_frame, font=("Segoe UI", 12), bg="#F0F4F8",
+                              relief=SOLID, bd=1, show="•", highlightthickness=1,
+                              highlightcolor="#1A3E6F", highlightbackground="#DDD")
+        self.txt_pass.pack(fill=X, pady=(5, 20), ipady=8)
 
         # Login Button
-        btn_login = Button(login_frame, text="Login", font=("times new roman", 15, "bold"),
-                           bg="#c0392b", fg="white", cursor="hand2", command=self.login)
-        btn_login.place(x=50, y=350, width=200, height=45)
+        btn_login = Button(form_frame, text="Login", font=("Segoe UI", 13, "bold"),
+                           bg="#2B6CB0", fg="white", cursor="hand2", relief=FLAT,
+                           activebackground="#1A3E6F", command=self.login, pady=8)
+        btn_login.pack(fill=X, pady=(10, 15))
 
-        # =======Clock on Left Panel=======
-        self.lbl = Label(self.root, text="WebCode Clock", font=("Book Antiqua", 20, "bold"), bg="#08a3d2", fg="white")
-        self.lbl.place(x=150, y=100)
+        # Links
+        link_frame = Frame(form_frame, bg="white")
+        link_frame.pack(fill=X, pady=10)
 
-        self.clock_lbl = Label(self.root, bg="#08a3d2", bd=0)
-        self.clock_lbl.place(x=100, y=150, width=400, height=400)
+        btn_register = Button(link_frame, text="Create New Account", font=("Segoe UI", 10),
+                              bd=0, cursor="hand2", fg="#2B6CB0", bg="white",
+                              activebackground="white", command=self.register_window)
+        btn_register.pack(side=LEFT)
 
-        self.working()
+        btn_forget = Button(link_frame, text="Forgot Password?", font=("Segoe UI", 10),
+                            bd=0, cursor="hand2", fg="#E8692A", bg="white",
+                            activebackground="white", command=self.forget_password)
+        btn_forget.pack(side=RIGHT)
 
-    def working(self):
+        # Start clock
+        self.update_clock()
+
+    def update_clock(self):
+        """Update analog clock and digital time display"""
         now = datetime.now()
-        hr = now.hour % 12
-        min_ = now.minute
-        sec_ = now.second
+        h = now.hour % 12
+        m = now.minute
+        s = now.second
 
-        hr_angle  = (hr * 30) + (min_ * 0.5)
-        min_angle = min_ * 6
-        sec_angle = sec_ * 6
+        hr_angle = (h / 12) * 360 + (m / 60) * 30
+        min_angle = (m / 60) * 360
+        sec_angle = (s / 60) * 360
 
-        self.clock_image(hr_angle, min_angle, sec_angle)
-        self.root.after(1000, self.working)
+        self.draw_clock(hr_angle, min_angle, sec_angle)
 
-    def clock_image(self, hr, min_, sec_):
-        clock = Image.new("RGB", (400, 400), (8, 25, 35))
-        draw = ImageDraw.Draw(clock)
+        self.lbl_time.config(text=now.strftime("%I:%M:%S %p"))
+        self.lbl_date.config(text=now.strftime("%A, %d %B %Y"))
+
+        self.root.after(1000, self.update_clock)
+
+    def draw_clock(self, hr, min_, sec):
+        """Draw analog clock on left panel"""
+        size = 200
+        cx = cy = size // 2
+        img = Image.new("RGB", (size, size), (26, 62, 111))  # #1A3E6F approximate
+        draw = ImageDraw.Draw(img)
 
         # Clock face
-        draw.ellipse((10, 10, 390, 390), outline="white", width=3)
+        draw.ellipse((5, 5, size-5, size-5), outline="white", width=2)
+        draw.ellipse((10, 10, size-10, size-10), outline="#A8C4E0", width=1)
 
         # Hour markers
         for i in range(12):
             angle = radians(i * 30)
-            x1 = 200 + 170 * sin(angle)
-            y1 = 200 - 170 * cos(angle)
-            x2 = 200 + 185 * sin(angle)
-            y2 = 200 - 185 * cos(angle)
-            draw.line((x1, y1, x2, y2), fill="white", width=3)
+            r1, r2 = cx - 15, cx - 8
+            draw.line((cx + r1 * sin(angle), cy - r1 * cos(angle),
+                       cx + r2 * sin(angle), cy - r2 * cos(angle)),
+                      fill="white", width=3 if i % 3 == 0 else 1)
 
-        # Number labels (12, 3, 6, 9)
-        for num, angle in [(12, 0), (3, 90), (6, 180), (9, 270)]:
-            a = radians(angle)
-            x = int(200 + 145 * sin(a)) - 8
-            y = int(200 - 145 * cos(a)) - 10
-            draw.text((x, y), str(num), fill="white")
+        # Hands
+        def draw_hand(angle, length, color, width):
+            rad = radians(angle)
+            draw.line((cx, cy, cx + length * sin(rad), cy - length * cos(rad)),
+                      fill=color, width=width)
 
-        # Hour hand
-        draw.line((200, 200, 200 + 60 * sin(radians(hr)), 200 - 60 * cos(radians(hr))), fill="white", width=5)
-        # Minute hand
-        draw.line((200, 200, 200 + 90 * sin(radians(min_)), 200 - 90 * cos(radians(min_))), fill="lightgreen", width=3)
-        # Second hand
-        draw.line((200, 200, 200 + 110 * sin(radians(sec_)), 200 - 110 * cos(radians(sec_))), fill="red", width=2)
+        draw_hand(hr, 60, "#E8692A", 4)
+        draw_hand(min_, 85, "#1ABC9C", 3)
+        draw_hand(sec, 90, "white", 2)
+
         # Center dot
-        draw.ellipse((193, 193, 207, 207), fill="cyan")
+        draw.ellipse((cx-4, cy-4, cx+4, cy+4), fill="#E8692A")
 
-        self.clock_photo = ImageTk.PhotoImage(clock)
-        self.clock_lbl.config(image=self.clock_photo)
-
-    def forget_password(self):
-        self.root2 = Toplevel()
-        self.root2.title("Forget Password")
-        self.root2.geometry("400x420+500+100")
-        self.root2.config(bg="white")
-        self.root2.focus_force()
-
-        t = Label(self.root2, text="Forget Password", font=("times new roman", 20, "bold"), bg="white", fg="#0b5377")
-        t.place(x=50, y=30)
-
-        email_lbl = Label(self.root2, text="Email", font=("times new roman", 15, "bold"), bg="white")
-        email_lbl.place(x=50, y=80)
-        self.fp_email = Entry(self.root2, font=("times new roman", 15), bg="lightgray")
-        self.fp_email.place(x=50, y=110, width=300)
-
-        question = Label(self.root2, text="Select Security Question", font=("times new roman", 13, "bold"), bg="white")
-        question.place(x=50, y=150)
-        self.cmb_quest = ttk.Combobox(self.root2, font=("times new roman", 13), state="readonly", justify=CENTER)
-        self.cmb_quest['values'] = ("Select", "Your Birth Place", "Your Girlfriend Name", "Your Pet Name")
-        self.cmb_quest.place(x=50, y=180, width=300)
-        self.cmb_quest.current(0)
-
-        answer = Label(self.root2, text="Answer", font=("times new roman", 15, "bold"), bg="white")
-        answer.place(x=50, y=220)
-        self.txt_answer = Entry(self.root2, font=("times new roman", 15), bg="lightgray")
-        self.txt_answer.place(x=50, y=250, width=300)
-
-        new_password = Label(self.root2, text="New Password", font=("times new roman", 15, "bold"), bg="white")
-        new_password.place(x=50, y=290)
-        self.txt_new_pass = Entry(self.root2, font=("times new roman", 15), bg="lightgray", show="*")
-        self.txt_new_pass.place(x=50, y=320, width=300)
-
-        btn_change = Button(self.root2, text="Reset Password", font=("times new roman", 13, "bold"),
-                            bg="#0b5377", fg="white", cursor="hand2", command=self.reset_password)
-        btn_change.place(x=50, y=370, width=300)
-
-    def reset_password(self):
-        if self.cmb_quest.get() == "Select" or self.txt_answer.get() == "" or self.txt_new_pass.get() == "" or self.fp_email.get() == "":
-            messagebox.showerror("Error", "All fields are required", parent=self.root2)
-        else:
-            try:
-                con = sqlite3.connect(database="rms.db")
-                cur = con.cursor()
-                cur.execute("select * from employee where email=? and question=? and answer=?",
-                            (self.fp_email.get(), self.cmb_quest.get(), self.txt_answer.get()))
-                row = cur.fetchone()
-                if row is None:
-                    messagebox.showerror("Error", "Incorrect email, question or answer", parent=self.root2)
-                else:
-                    cur.execute("update employee set password=? where email=?",
-                                (self.txt_new_pass.get(), self.fp_email.get()))
-                    con.commit()
-                    con.close()
-                    messagebox.showinfo("Success", "Password reset successfully!", parent=self.root2)
-                    self.root2.destroy()
-            except Exception as ex:
-                messagebox.showerror("Error", f"Error due to: {str(ex)}", parent=self.root2)
+        self.clock_img = ImageTk.PhotoImage(img)
+        self.clock_lbl.config(image=self.clock_img)
 
     def register_window(self):
         self.root.destroy()
         os.system("python register.py")
 
+    def forget_password(self):
+        self.root2 = Toplevel(self.root)
+        self.root2.title("Reset Password")
+        self.root2.geometry("450x550+350+150")
+        self.root2.config(bg="white")
+        self.root2.resizable(False, False)
+
+        # Title
+        Label(self.root2, text="Reset Password", font=("Segoe UI", 20, "bold"),
+              bg="white", fg="#1A3E6F").pack(pady=(30, 10))
+
+        # Email
+        Label(self.root2, text="Email Address", font=("Segoe UI", 12, "bold"),
+              bg="white", fg="#333").pack(anchor="w", padx=40, pady=(20, 5))
+        self.fp_email = Entry(self.root2, font=("Segoe UI", 12), bg="#F0F4F8",
+                              relief=SOLID, bd=1)
+        self.fp_email.pack(fill=X, padx=40, pady=(0, 15), ipady=6)
+
+        # Security Question
+        Label(self.root2, text="Security Question", font=("Segoe UI", 12, "bold"),
+              bg="white", fg="#333").pack(anchor="w", padx=40, pady=(5, 5))
+        self.cmb_quest = ttk.Combobox(self.root2, font=("Segoe UI", 11), state="readonly")
+        self.cmb_quest['values'] = ("Select", "Your Birth Place", "Your Girlfriend Name", "Your Pet Name")
+        self.cmb_quest.pack(fill=X, padx=40, pady=(0, 15), ipady=5)
+        self.cmb_quest.current(0)
+
+        # Answer
+        Label(self.root2, text="Answer", font=("Segoe UI", 12, "bold"),
+              bg="white", fg="#333").pack(anchor="w", padx=40, pady=(5, 5))
+        self.txt_answer = Entry(self.root2, font=("Segoe UI", 12), bg="#F0F4F8",
+                                relief=SOLID, bd=1)
+        self.txt_answer.pack(fill=X, padx=40, pady=(0, 15), ipady=6)
+
+        # New Password
+        Label(self.root2, text="New Password", font=("Segoe UI", 12, "bold"),
+              bg="white", fg="#333").pack(anchor="w", padx=40, pady=(5, 5))
+        self.txt_new_pass = Entry(self.root2, font=("Segoe UI", 12), bg="#F0F4F8",
+                                  relief=SOLID, bd=1, show="•")
+        self.txt_new_pass.pack(fill=X, padx=40, pady=(0, 20), ipady=6)
+
+        # Reset Button
+        btn_reset = Button(self.root2, text="Reset Password", font=("Segoe UI", 13, "bold"),
+                           bg="#2B6CB0", fg="white", cursor="hand2", relief=FLAT,
+                           command=self.reset_password, pady=8)
+        btn_reset.pack(fill=X, padx=40, pady=(10, 20))
+
+    def reset_password(self):
+        if self.cmb_quest.get() == "Select" or self.txt_answer.get() == "" or self.txt_new_pass.get() == "" or self.fp_email.get() == "":
+            messagebox.showerror("Error", "All fields are required", parent=self.root2)
+            return
+        if len(self.txt_new_pass.get()) < 6:
+            messagebox.showerror("Error", "Password must be at least 6 characters", parent=self.root2)
+            return
+
+        try:
+            con = sqlite3.connect(database="rms.db")
+            cur = con.cursor()
+            cur.execute("SELECT * FROM employee WHERE email=? AND question=? AND answer=?",
+                        (self.fp_email.get(), self.cmb_quest.get(), self.txt_answer.get()))
+            row = cur.fetchone()
+            if row is None:
+                messagebox.showerror("Error", "Incorrect email, question or answer", parent=self.root2)
+            else:
+                cur.execute("UPDATE employee SET password=? WHERE email=?",
+                            (self.txt_new_pass.get(), self.fp_email.get()))
+                con.commit()
+                messagebox.showinfo("Success", "Password reset successfully!", parent=self.root2)
+                self.root2.destroy()
+            con.close()
+        except Exception as ex:
+            messagebox.showerror("Error", f"Error due to: {str(ex)}", parent=self.root2)
+
     def login(self):
-        if self.txt_email.get() == "" or self.txt_pass.get() == "":
-            messagebox.showerror("Error", "All fields are required", parent=self.root)
-        else:
-            try:
-                con = sqlite3.connect(database="rms.db")
-                cur = con.cursor()
-                cur.execute("select * from employee where email=? and password=?",
-                            (self.txt_email.get(), self.txt_pass.get()))
-                row = cur.fetchone()
-                if row is None:
-                    messagebox.showerror("Error", "Invalid Email or Password", parent=self.root)
-                else:
-                    messagebox.showinfo("Success", f"Welcome to Student Result Management System{self.txt_email.get()}", parent=self.root)
-                    self.root.destroy()
-                    os.system("python hi.py")
-            except Exception as ex:
-                messagebox.showerror("Error", f"Error due to: {str(ex)}", parent=self.root)
+        if self.txt_email.get().strip() == "" or self.txt_pass.get() == "":
+            messagebox.showerror("Error", "Please enter email and password", parent=self.root)
+            return
+        try:
+            con = sqlite3.connect(database="rms.db")
+            cur = con.cursor()
+            cur.execute("SELECT * FROM employee WHERE email=? AND password=?",
+                        (self.txt_email.get().strip(), self.txt_pass.get()))
+            row = cur.fetchone()
+            if row is None:
+                messagebox.showerror("Error", "Invalid Email or Password", parent=self.root)
+            else:
+                messagebox.showinfo("Success", f"Welcome {row[1]} {row[2]}!", parent=self.root)
+                self.root.destroy()
+                os.system("python hi.py")
+            con.close()
+        except Exception as ex:
+            messagebox.showerror("Error", f"Error due to: {str(ex)}", parent=self.root)
+
 
 if __name__ == "__main__":
-    root = Tk()
+    root= Tk()
+    root.tk.call('tk', 'scaling', 1.4)
     obj = Login_window(root)
     root.mainloop()
