@@ -31,8 +31,8 @@ class RMS:
         # Menu Bar
         self._create_menu_bar()
         
-        # Main Content Area
-        self._create_content_area()
+        # Main Content Area - Responsive
+        self._create_content_area_responsive()
         
         # Footer
         self._create_footer()
@@ -58,10 +58,11 @@ class RMS:
                          font=("Segoe UI", 18, "bold"), bg="#1A3E6F", fg="white")
         lbl_title.place(x=75, y=15)
         
-        # Date and Time in title bar
-        self.lbl_datetime = Label(title_frame, font=("Segoe UI", 10),
-                                  bg="#1A3E6F", fg="#A8C4E0")
-        self.lbl_datetime.place(x=1050, y=20)
+        # Date and Time in title bar - Positioned at right corner where white strip ends
+        self.lbl_datetime = Label(title_frame, font=("Segoe UI", 11, "bold"),
+                                  bg="#1A3E6F", fg="#7FD3FF", relief=RAISED, 
+                                  padx=12, pady=5, bd=1)
+        self.lbl_datetime.place(x=1330, y=18, anchor="ne")
         self._update_datetime()
     
     def _create_menu_bar(self):
@@ -90,93 +91,185 @@ class RMS:
             x_pos += 170
         
         # Welcome message
-        lbl_welcome = Label(menu_frame, text="Welcome back!", font=("Segoe UI", 11),
+        lbl_welcome = Label(menu_frame, text="Welcome back!", font=("Segoe UI", 11, "bold"),
                            bg="white", fg="#2B6CB0")
         lbl_welcome.place(x=1150, y=22)
     
-    def _create_content_area(self):
-        """Create main content area with stats cards"""
-        # Stats Cards
-        self.lbl_course = self._create_stat_card(
-            "📚", "Total Courses", "#E8692A", 50, 180
+    def _create_content_area_responsive(self):
+        """Create main content area with decorative borders - RESPONSIVE"""
+        
+        # Padding frame
+        padding_frame = Frame(self.root, bg="#F0F4F8")
+        padding_frame.pack(fill=BOTH, expand=True, padx=20, pady=15)
+        
+        # Outer decorative frame (Orange border)
+        outer_border = Frame(padding_frame, bg="#E8692A")
+        outer_border.pack(fill=BOTH, expand=True)
+        
+        # Inner white frame with padding
+        inner_frame = Frame(outer_border, bg="#F0F4F8")
+        inner_frame.pack(fill=BOTH, expand=True, padx=8, pady=8)
+        
+        # Stats Cards Frame
+        stats_frame = Frame(inner_frame, bg="#F0F4F8")
+        stats_frame.pack(fill=X, padx=10, pady=10)
+        
+        # Create stat cards side by side
+        self.lbl_course = self._create_stat_card_responsive(
+            stats_frame, "📚", "Total Courses", "#E8692A", 0
         )
-        self.lbl_student = self._create_stat_card(
-            "👨‍🎓", "Total Students", "#2B6CB0", 470, 180
+        self.lbl_student = self._create_stat_card_responsive(
+            stats_frame, "👨‍🎓", "Total Students", "#2B6CB0", 1
         )
-        self.lbl_result = self._create_stat_card(
-            "📝", "Total Results", "#1ABC9C", 890, 180
+        self.lbl_result = self._create_stat_card_responsive(
+            stats_frame, "📝", "Total Results", "#1ABC9C", 2
         )
         
-        # Clock Display
-        clock_frame = Frame(self.root, bg="white", bd=2, relief=GROOVE)
-        clock_frame.place(x=50, y=330, width=300, height=300)
+        # Bottom content frame (Clock + Info)
+        bottom_frame = Frame(inner_frame, bg="#F0F4F8")
+        bottom_frame.pack(fill=BOTH, expand=True, padx=10, pady=(0, 10))
+        
+        # Left side - Clock
+        clock_frame = Frame(bottom_frame, bg="white", bd=2, relief=GROOVE)
+        clock_frame.pack(side=LEFT, fill=BOTH, expand=False, padx=(0, 10), pady=10)
         
         self.clock_lbl = Label(clock_frame, bg="white")
-        self.clock_lbl.pack(pady=20)
+        self.clock_lbl.pack(pady=15)
         
         self.lbl_time = Label(clock_frame, font=("Segoe UI", 24, "bold"),
                               bg="white", fg="#1A3E6F")
         self.lbl_time.pack()
         
-        self.lbl_date = Label(clock_frame, font=("Segoe UI", 12),
-                              bg="white", fg="#7F8C8D")
+        self.lbl_date = Label(clock_frame, font=("Segoe UI", 12, "bold"),
+                              bg="white", fg="#E8692A")
         self.lbl_date.pack(pady=5)
         
-        # Info Panel
-        info_frame = Frame(self.root, bg="white", bd=2, relief=GROOVE)
-        info_frame.place(x=380, y=330, width=920, height=300)
+        # Right side - Info Panel with cyan border
+        info_border = Frame(bottom_frame, bg="#00BCD4")
+        info_border.pack(side=RIGHT, fill=BOTH, expand=True, pady=10)
         
-        lbl_info_title = Label(info_frame, text="📌 Quick Actions",
-                              font=("Segoe UI", 14, "bold"),
-                              bg="white", fg="#1A3E6F")
-        lbl_info_title.place(x=20, y=15)
+        info_frame = Frame(info_border, bg="white")
+        info_frame.pack(fill=BOTH, expand=True, padx=5, pady=5)
         
-        # Quick action buttons
+        # Main container for content
+        main_content = Frame(info_frame, bg="white")
+        main_content.pack(fill=BOTH, expand=True, padx=15, pady=10)
+        
+        # LEFT COLUMN - Quick Actions
+        left_column = Frame(main_content, bg="white")
+        left_column.pack(side=LEFT, fill=Y, padx=(0, 15))
+        
+        lbl_actions_title = Label(left_column, text="⚡ Quick Actions", 
+                                 font=("Segoe UI", 14, "bold"),
+                                 bg="white", fg="#1A3E6F")
+        lbl_actions_title.pack(anchor=W, pady=(0, 10))
+        
         actions = [
-            ("➕ Add New Course", self.add_course, "#E8692A", 30, 70),
-            ("👨‍🎓 Register Student", self.add_student, "#2B6CB0", 30, 130),
-            ("📝 Enter Results", self.add_result, "#1ABC9C", 30, 190),
-            ("📊 View Reports", self.add_report, "#8E44AD", 30, 250),
+            ("➕ Add Course", self.add_course, "#E8692A"),
+            ("👨‍🎓 Register Student", self.add_student, "#2B6CB0"),
+            ("📝 Enter Results", self.add_result, "#1ABC9C"),
+            ("📊 View Reports", self.add_report, "#8E44AD"),
         ]
         
-        for text, cmd, color, x, y in actions:
-            btn = Button(info_frame, text=text, font=("Segoe UI", 11),
+        for text, cmd, color in actions:
+            btn = Button(left_column, text=text, font=("Segoe UI", 10, "bold"),
                         bg=color, fg="white", cursor="hand2", relief=FLAT,
                         activebackground="#1A3E6F", command=cmd,
-                        width=25, height=2)
-            btn.place(x=x, y=y)
+                        width=18, pady=10)
+            btn.pack(fill=X, pady=4)
         
-        # Recent activity
-        lbl_recent = Label(info_frame, text="📋 Recent Activity",
+        # RIGHT COLUMN - Multiple sections
+        right_column = Frame(main_content, bg="white")
+        right_column.pack(side=RIGHT, fill=BOTH, expand=True)
+        
+        # TOP RIGHT - Recent Activity
+        activity_section = Frame(right_column, bg="#F5F5F5", relief=GROOVE, bd=1)
+        activity_section.pack(fill=BOTH, expand=True, pady=(0, 8))
+        
+        lbl_recent = Label(activity_section, text="📋 Recent Activity", 
                           font=("Segoe UI", 12, "bold"),
-                          bg="white", fg="#1A3E6F")
-        lbl_recent.place(x=350, y=15)
+                          bg="#F5F5F5", fg="#1A3E6F")
+        lbl_recent.pack(anchor=W, padx=10, pady=(8, 5))
         
-        self.activity_list = Listbox(info_frame, font=("Segoe UI", 10),
-                                     bg="#F0F4F8", fg="#333", bd=0,
-                                     highlightthickness=0, height=12)
-        self.activity_list.place(x=350, y=50, width=540, height=220)
+        self.activity_list = Listbox(activity_section, font=("Segoe UI", 9),
+                                     bg="white", fg="#333", bd=0,
+                                     highlightthickness=0, height=5)
+        self.activity_list.pack(fill=BOTH, expand=True, padx=10, pady=(0, 10))
         
         # Sample activities
         sample_activities = [
-            "🎉 Welcome to SRMS",
-            "📚 System ready to use",
-            "👨‍🎓 Add students to get started",
+            "✅ System initialized successfully",
+            "📚 Ready to manage courses",
+            "👨‍🎓 Ready to register students",
         ]
         for act in sample_activities:
             self.activity_list.insert(END, act)
+        
+        # MIDDLE RIGHT - System Status
+        status_section = Frame(right_column, bg="#E8F5E9", relief=GROOVE, bd=1)
+        status_section.pack(fill=BOTH, expand=True, pady=(0, 8))
+        
+        lbl_status = Label(status_section, text="🔧 System Status",
+                          font=("Segoe UI", 12, "bold"),
+                          bg="#E8F5E9", fg="#1A3E6F")
+        lbl_status.pack(anchor=W, padx=10, pady=(8, 5))
+        
+        status_items = [
+            ("Database", "✅ Connected"),
+            ("Server", "✅ Running"),
+            ("Backup", "✅ Updated"),
+        ]
+        
+        for label, status in status_items:
+            status_frame = Frame(status_section, bg="#E8F5E9")
+            status_frame.pack(fill=X, padx=10, pady=2)
+            
+            lbl_label = Label(status_frame, text=label, font=("Segoe UI", 9),
+                            bg="#E8F5E9", fg="#333")
+            lbl_label.pack(side=LEFT)
+            
+            lbl_stat = Label(status_frame, text=status, font=("Segoe UI", 9, "bold"),
+                           bg="#E8F5E9", fg="#2E7D32")
+            lbl_stat.pack(side=RIGHT)
+        
+        # BOTTOM RIGHT - Quick Stats
+        stats_section = Frame(right_column, bg="#E3F2FD", relief=GROOVE, bd=1)
+        stats_section.pack(fill=BOTH, expand=True)
+        
+        lbl_stats = Label(stats_section, text="📊 Quick Stats",
+                         font=("Segoe UI", 12, "bold"),
+                         bg="#E3F2FD", fg="#1A3E6F")
+        lbl_stats.pack(anchor=W, padx=10, pady=(8, 5))
+        
+        stats_data = [
+            ("Pass Rate", "92.5%"),
+            ("Active Users", "45"),
+            ("Last Backup", "Today"),
+        ]
+        
+        for label, value in stats_data:
+            stats_frame = Frame(stats_section, bg="#E3F2FD")
+            stats_frame.pack(fill=X, padx=10, pady=2)
+            
+            lbl_label = Label(stats_frame, text=label, font=("Segoe UI", 9),
+                            bg="#E3F2FD", fg="#333")
+            lbl_label.pack(side=LEFT)
+            
+            lbl_value = Label(stats_frame, text=value, font=("Segoe UI", 9, "bold"),
+                            bg="#E3F2FD", fg="#1976D2")
+            lbl_value.pack(side=RIGHT)
     
-    def _create_stat_card(self, icon, label, color, x, y):
-        """Create a statistics card"""
-        frame = Frame(self.root, bg=color, bd=0, relief=FLAT)
-        frame.place(x=x, y=y, width=380, height=120)
+    def _create_stat_card_responsive(self, parent, icon, label, color, column):
+        """Create a responsive statistics card"""
+        frame = Frame(parent, bg=color, relief=FLAT)
+        frame.pack(side=LEFT, fill=BOTH, expand=True, padx=5)
         
         inner = Frame(frame, bg=color)
         inner.pack(fill=BOTH, expand=True, padx=15, pady=15)
         
         lbl_icon = Label(inner, text=icon, font=("Segoe UI", 32),
                          bg=color, fg="white")
-        lbl_icon.pack(side=LEFT)
+        lbl_icon.pack(side=LEFT, padx=(0, 10))
         
         right_frame = Frame(inner, bg=color)
         right_frame.pack(side=RIGHT, fill=BOTH, expand=True)
@@ -185,7 +278,7 @@ class RMS:
                           bg=color, fg="white", anchor="e")
         lbl_value.pack(fill=X)
         
-        lbl_label = Label(right_frame, text=label, font=("Segoe UI", 12),
+        lbl_label = Label(right_frame, text=label, font=("Segoe UI", 12, "bold"),
                           bg=color, fg="white", anchor="e")
         lbl_label.pack(fill=X)
         
@@ -197,7 +290,7 @@ class RMS:
         footer.pack(side=BOTTOM, fill=X)
         
         lbl_footer = Label(footer, text="SRMS — Student Result Management System | A.S. College, Khanna",
-                          font=("Segoe UI", 9), bg="#1A3E6F", fg="#A8C4E0")
+                          font=("Segoe UI", 9, "bold"), bg="#1A3E6F", fg="#A8C4E0")
         lbl_footer.pack(pady=8)
     
     def _update_datetime(self):

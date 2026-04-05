@@ -7,8 +7,9 @@ import sqlite3
 import os
 
 class Login_window:
-    def __init__(self, root):
+    def __init__(self, root, callback=None):
         self.root = root
+        self.callback = callback  # Add callback support
         self.root.title("SRMS — Login")
         self.root.geometry("1100x650+100+50")
         self.root.config(bg="#F0F4F8")
@@ -147,7 +148,18 @@ class Login_window:
 
     def register_window(self):
         self.root.destroy()
-        os.system("python register.py")
+        # Try to use callback if available, otherwise fallback to os.system
+        if self.callback:
+            try:
+                from register import Register_window
+                reg_root = Tk()
+                reg_root.tk.call('tk', 'scaling', 1.4)
+                Register_window(reg_root)
+                reg_root.mainloop()
+            except:
+                os.system("python register.py")
+        else:
+            os.system("python register.py")
 
     def forget_password(self):
         self.root2 = Toplevel(self.root)
@@ -236,7 +248,12 @@ class Login_window:
             else:
                 messagebox.showinfo("Success", f"Welcome {row[1]} {row[2]}!", parent=self.root)
                 self.root.destroy()
-                os.system("python hi.py")
+                
+                # Use callback if available, otherwise fallback to os.system
+                if self.callback:
+                    self.callback()
+                else:
+                    os.system("python hi.py")
             con.close()
         except Exception as ex:
             messagebox.showerror("Error", f"Error due to: {str(ex)}", parent=self.root)
